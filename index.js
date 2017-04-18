@@ -28,6 +28,7 @@ As a master your available commands are:
 - \`q: TEXT\` to set the question text
 - \`a: NUMBER\` to set the true value
 - \`results\` to see the results
+- \`reset game\` to reset the game
 - \`shutdown\` to turn off the bot
 - \`uptime\` to see how long the bot has been running
     `);
@@ -39,7 +40,7 @@ Your available commands are:
 - \`game time\` to register as a player in the game
 - \`leave game\` to unregister from the game and to stop receiving notifications
 - \`$NUMBER\` to enter your answer
-- \`players\` to see list of all the players
+- \`standings\` to see list of all the players
 - \`num players\` to see how many players are registered
     `);
 });
@@ -253,33 +254,6 @@ controller.hears(['get results', 'results'], 'direct_message', function(bot, mes
     });
 });
 
-//
-// Participant routes
-//
-
-function setUsernameInDB(bot, convo, message) {
-    if (convo.status === 'completed') {
-        controller.storage.users.get(message.user, function(err, user) {
-            if (!user) {
-                user = {
-                    id: message.user,
-                    channel: message.channel,
-                    user: message.user,
-                    answer: null,
-                    points: null
-                };
-            }
-            user.name = convo.extractResponse('nickname');
-            controller.storage.users.save(user, function(err, id) {
-                bot.reply(message, 'Got it. I will call you ' + user.name + ' from now on.');
-            });
-        });
-    } else {
-        // this happens if the conversation ended prematurely for some reason
-        bot.reply(message, 'OK, nevermind!');
-    }
-}
-
 var yes_no_patterns = [
     {
         pattern: 'yes',
@@ -304,6 +278,57 @@ var yes_no_patterns = [
         }
     }
 ];
+
+controller.hears(['clear standings', 'reset game'], 'direct_message', function(bot, message){
+    requireMaster(bot, message, function(bot, message, game_data){
+        bot.startConversation(message, function(err, convo) {
+            if (!err) {
+                convo.ask('Are you sure that you want to clear the standings?', yes_no_patterns);
+                convo.on('end', function(convo) {
+                    if (convo.status === 'completed') {
+                        controller.storage.users.all(function(err, user_data){
+                            for (var i = user_data.length - 1; i >= 0; i--) {
+                                var user = user_data[i];
+                                user.points = 0;
+                                controller.storage.users.save(user);
+                            }
+                            bot.reply(message, 'The standings have been cleared');
+                        });
+                    } else {
+                        bot.reply(message, 'OK, nevermind!');
+                    }
+                });
+            }
+        });
+    });
+});
+
+//
+// Participant routes
+//
+
+function setUsernameInDB(bot, convo, message) {
+    if (convo.status === 'completed') {
+        controller.storage.users.get(message.user, function(err, user) {
+            if (!user) {
+                user = {
+                    id: message.user,
+                    channel: message.channel,
+                    user: message.user,
+                    answer: null,
+                    points: 0
+                };
+            }
+            user.name = convo.extractResponse('nickname');
+            controller.storage.users.save(user, function(err, id) {
+                bot.reply(message, 'Got it. I will call you ' + user.name + ' from now on.');
+            });
+        });
+    } else {
+        // this happens if the conversation ended prematurely for some reason
+        bot.reply(message, 'OK, nevermind!');
+    }
+}
 
 controller.hears(['game time'], 'direct_message', function(bot, message){
     controller.storage.users.get(message.user, function(err, user) {
@@ -348,10 +373,12 @@ controller.hears(['number of players', 'num players'], 'direct_message', functio
     });
 });
 
-controller.hears(['show players', 'players'], 'direct_message', function(bot, message){
+controller.hears(['show players', 'players', 'standings'], 'direct_message', function(bot, message){
     controller.storage.users.all(function(err, all_user_data){
-        var msg = all_user_data.map(function(a){
-            return a.name;
+        var msg = all_user_data.sort(function(a,b) {
+            return a.points - b.points;
+        }).map(function(a){
+            return a.name + ' (' + a.points + ')';
         }).sort().join('\n');
 
         bot.reply(message, '*Current players are:*\n' + msg);
