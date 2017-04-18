@@ -142,12 +142,82 @@ function usersWithIncorrectAnswers(users, current_amount) {
     });
 }
 
+function addPointsToUser(user, points) {
+    if (user) {
+        if (user.points) {
+            user.points += points;
+        } else {
+            user.points = points;
+        }
+
+        controller.storage.users.save(user);
+    }
+}
+
+function awardPoints(correctUsers, incorrectUsers) {
+    var i, points;
+
+    if (correctUsers) {
+        for (i = correctUsers.length - 1; i >= 0; i--) {
+            points = 1;
+            if (i === 0) {
+                points = 10;
+            } else if (i === 1) {
+                points = 5;
+            }
+            addPointsToUser(correctUsers[i], points);
+        }
+    }
+
+    if (incorrectUsers) {
+        for (i = incorrectUsers.length - 1; i >= 0; i--) {
+            points = -1;
+            if (i === incorrectUsers.length - 1) {
+                points = -5;
+            }
+            addPointsToUser(incorrectUsers[i], points);
+        }
+    }
+}
+
+function askAboutPoints(bot, message, correctUsers, incorrectUsers) {
+    bot.startConversation(message, function(err, convo) {
+        if (!err) {
+            convo.ask('Do you want to award points now?', [
+                {
+                    pattern: bot.utterances.yes,
+                    callback: function(response, convo) {
+                        awardPoints(correctUsers, incorrectUsers);
+                        convo.say('I\'ll award the points right now');
+                        convo.next();
+                    }
+                },
+                {
+                    pattern: bot.utterances.no,
+                    callback: function(response, convo) {
+                        convo.stop();
+                    }
+                },
+                {
+                    default: true,
+                    callback: function(response, convo) {
+                        convo.repeat();
+                        convo.next();
+                    }
+                }
+            ]);
+        }
+    });
+}
+
 function composeStandings(bot, message, data, current_amount){
-    var valid_answers = usersWithCorrectAnswers(data, current_amount).map(function(r){
+    var correctUsers = usersWithCorrectAnswers(data, current_amount);
+    var valid_answers = correctUsers.map(function(r){
         return r.name + ' - ' + r.answer; // creating the strings for each entry
     }).join('\n');
 
-    var invalid_answers = usersWithIncorrectAnswers(data,current_amount).map(function(r){
+    var incorrectUsers = usersWithIncorrectAnswers(data,current_amount);
+    var invalid_answers = incorrectUsers.map(function(r){
         return r.name + ' - ' + r.answer; // creating the strings for each entry
     }).join('\n');
 
@@ -162,6 +232,7 @@ function composeStandings(bot, message, data, current_amount){
     }
 
     bot.reply(message, response);
+    askAboutPoints(bot, message, correctUsers, incorrectUsers);
 }
 
 controller.hears(['get results', 'results'], 'direct_message', function(bot, message){
@@ -194,7 +265,8 @@ function setUsernameInDB(bot, convo, message) {
                     id: message.user,
                     channel: message.channel,
                     user: message.user,
-                    answer: null
+                    answer: null,
+                    points: null
                 };
             }
             user.name = convo.extractResponse('nickname');
