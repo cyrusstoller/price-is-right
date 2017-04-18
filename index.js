@@ -232,8 +232,7 @@ controller.hears(['game time'], 'direct_message', function(bot, message){
         } else {
             bot.startConversation(message, function(err, convo) {
                 if (!err) {
-                    convo.say('I do not know your name yet!');
-                    convo.ask('What should I call you?', function(response, convo) {
+                    convo.ask('I do not know your name yet! What should I call you?', function(response, convo) {
                         convo.ask('You want me to call you `' + response.text + '`?', yes_no_patterns);
                         convo.next();
                     }, {'key': 'nickname'}); // store the results in a field called nickname
@@ -281,14 +280,19 @@ controller.hears(['show players', 'players'], 'direct_message', function(bot, me
 
 controller.hears(['\\$(.*)'], 'direct_message', function(bot, message){
     controller.storage.users.get(message.user, function(err, user){
-        var amount =  parseInt(message.match[1]);
-        // bot.botkit.log(JSON.stringify(message));
-        user.answer = amount;
-        controller.storage.users.save(user, function(err, id){
-            var msg = 'I received your guess of `' + amount + '`. ';
-            msg += 'If you would like to change your guess please enter another message preceeded by the `$`.';
+        if (user) {
+            var amount =  parseInt(message.match[1]);
+            // bot.botkit.log(JSON.stringify(message));
+            user.answer = amount;
+            controller.storage.users.save(user, function(err, id){
+                var msg = 'I received your guess of `' + amount + '`. ';
+                msg += 'If you would like to change your guess please enter another message preceeded by the `$`.';
+                bot.reply(message, msg);
+            });
+        } else {
+            var msg = 'You need to register first. To do that, type `game time`. Once I know your name, be sure to guess again.';
             bot.reply(message, msg);
-        });
+        }
     });
 });
 
