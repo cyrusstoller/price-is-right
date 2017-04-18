@@ -126,20 +126,28 @@ controller.hears(['answer: (.*)', 'a: (.*)'], 'direct_message', function(bot, me
     });
 });
 
-function composeStandings(bot, message, data, current_amount){
-    var valid_answers = data.filter(function(a){
+function usersWithCorrectAnswers(users, current_amount) {
+    return users.filter(function(a){
         return a.answer <= current_amount; // only the valid responses
     }).sort(function(a,b){
         return b.answer - a.answer; // sort in descending order
-    }).map(function(r){
-        return r.name + ' - ' + r.answer; // creating the strings for each entry
-    }).join('\n');
+    });
+}
 
-    var invalid_answers = data.filter(function(a){
+function usersWithIncorrectAnswers(users, current_amount) {
+    return users.filter(function(a){
         return a.answer > current_amount; // only invalid responses
     }).sort(function(a,b){
         return a.answer - b.answer; // sort in ascending order
-    }).map(function(r){
+    });
+}
+
+function composeStandings(bot, message, data, current_amount){
+    var valid_answers = usersWithCorrectAnswers(data, current_amount).map(function(r){
+        return r.name + ' - ' + r.answer; // creating the strings for each entry
+    }).join('\n');
+
+    var invalid_answers = usersWithIncorrectAnswers(data,current_amount).map(function(r){
         return r.name + ' - ' + r.answer; // creating the strings for each entry
     }).join('\n');
 
