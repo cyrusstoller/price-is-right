@@ -256,7 +256,7 @@ controller.hears(['get results', 'results'], 'direct_message', function(bot, mes
 
 var yes_no_patterns = [
     {
-        pattern: 'yes',
+        pattern: bot.utterances.yes,
         callback: function(response, convo) {
             // since no further messages are queued after this,
             // the conversation will end naturally with status == 'completed'
@@ -264,7 +264,7 @@ var yes_no_patterns = [
         }
     },
     {
-        pattern: 'no',
+        pattern: bot.utterances.no,
         callback: function(response, convo) {
             // stop the conversation. this will cause it to end with status == 'stopped'
             convo.stop();
