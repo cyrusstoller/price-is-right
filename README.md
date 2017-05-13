@@ -18,8 +18,11 @@ to get the bot installed.
 
 ## Installation
 
-[Register a new slackbot](http://my.slack.com/services/new/bot)
-and place your API token into `.env`, so that it looks like:
+[Register a new slackbot](http://my.slack.com/services/new/bot).
+
+### Manual Approach
+
+Place your API token into `.env`, so that it looks like:
 
 ```bash
 token=SLACK_API_TOKEN
@@ -30,6 +33,14 @@ Then run the following commands to boot the bot locally:
 ```bash
 $ npm install
 $ npm start
+```
+
+### Docker Approach
+
+Add your API token to `docker-compose.yml`.
+
+```bash
+$ docker-compose up
 ```
 
 ## Contributing

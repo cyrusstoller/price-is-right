@@ -1,0 +1,5 @@
+bot:
+  build: .
+  command: npm start
+  # environment:
+  #   - token:SLACK_API_KEY
