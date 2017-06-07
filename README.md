@@ -43,6 +43,21 @@ Add your API token to `docker-compose.yml`.
 $ docker-compose up
 ```
 
+## Game Play
+
+To start, you need to assign a game master. As the person who spins up the
+chatbot, you do this by being the first one to direct messaging the
+chatbot `I am your master`.
+
+To see your options as the master, type `master help` into the direct message
+with the chatbot.
+
+To register new players, ask them to open a direct message with the chatbot and
+message `game time`.
+
+To see the options available to the player, type `help` into the direct message
+with the chatbot.
+
 ## Contributing
 
 ### Bugs / Issues
