@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A slack bot to run a game of the Price is Right",
   "main": "index.js",
+  "repository": "https://github.com/cyrusstoller/price-is-right",
   "dependencies": {
     "async": "^2.1.5",
     "back": "^1.0.1",
@@ -15,7 +16,7 @@
     "crypto": "0.0.3",
     "dotenv": "^4.0.0",
     "express": "^4.15.2",
-    "https-proxy-agent": "^1.0.0",
+    "https-proxy-agent": "^2.2.0",
     "jfs": "^0.2.6",
     "jshint": "^2.9.4",
     "localtunnel": "^1.8.2",
